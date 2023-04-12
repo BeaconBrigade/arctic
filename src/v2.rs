@@ -674,9 +674,3 @@ pub struct EventLoop;
 
 impl internal::Level for EventLoop {}
 impl Connected for EventLoop {}
-
-/// [`PolarSensor`] level for a running event loop
-pub struct Running;
-
-impl internal::Level for Running {}
-impl Connected for Running {}

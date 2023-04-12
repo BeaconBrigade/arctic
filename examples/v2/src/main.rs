@@ -30,8 +30,8 @@ async fn main() -> color_eyre::Result<()> {
         .await?
         .block_connect(&id)
         .await?
-        .listen(EventType::Acc)?
-        .listen(EventType::Ecg)?
+        .listen(EventType::Acc)
+        .listen(EventType::Ecg)
         .range(8)
         .sample_rate(200)
         .build()

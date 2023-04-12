@@ -231,9 +231,9 @@ impl PolarSensor<Bluetooth> {
 impl PolarSensor<Configure> {
     /// Add a data type to listen to
     #[instrument(skip(self))]
-    pub fn listen(mut self, ty: EventType) -> PolarResult<Self> {
+    pub fn listen(mut self, ty: EventType) -> Self {
         if self.data_types.contains(&ty) {
-            return Ok(self);
+            return self;
         }
         tracing::info!("{ty:?} added to data_types");
 
@@ -257,7 +257,7 @@ impl PolarSensor<Configure> {
 
         self.data_types.push(ty);
 
-        Ok(self)
+        self
     }
 
     /// Set data range for acceleration data: 2, 4 or 8

@@ -2,7 +2,7 @@
 //!
 //! This module contains constants and enums related to all of the UUID characteristics of the Polar H10
 
-use crate::NotifyStream;
+use crate::{v2::EventType, NotifyStream};
 use uuid::Uuid;
 
 /// Battery notify stream.
@@ -37,6 +37,16 @@ impl From<NotifyStream> for NotifyUuid {
             NotifyStream::HeartRate => Self::HeartMeasurement,
             NotifyStream::MeasurementData => Self::MeasurementData,
             NotifyStream::MeasurementCP => Self::MeasurementCP,
+        }
+    }
+}
+
+impl From<EventType> for NotifyUuid {
+    fn from(value: EventType) -> Self {
+        match value {
+            EventType::Hr => Self::HeartMeasurement,
+            EventType::Ecg | EventType::Acc => Self::MeasurementData,
+            EventType::Battery => Self::BatteryLevel,
         }
     }
 }

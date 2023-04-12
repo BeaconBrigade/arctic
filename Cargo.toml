@@ -21,8 +21,10 @@ async-trait = "0.1"
 btleplug = "0.9"
 chrono = "0.4"
 futures = "0.3"
+thiserror = "1.0.40"
 tokio = { version = "1.10.0", features = ["macros", "rt", "rt-multi-thread"] }
 tokio-stream = { version = "0.1", features = ["sync"]}
+tracing = "0.1.37"
 uuid = "0.8"
 
 [dev-dependencies]

@@ -60,14 +60,15 @@ pub use async_trait::async_trait;
 use btleplug::api::{Central, Characteristic, Manager as _, Peripheral as _, ScanFilter};
 use btleplug::platform::{Adapter, Manager, Peripheral};
 use futures::stream::StreamExt;
-use std::fmt;
 use std::sync::Arc;
+use thiserror::Error;
 use tokio::time::{self, Duration};
 use uuid::Uuid;
 
 mod control;
 mod polar_uuid;
 mod response;
+pub mod v2;
 
 pub use control::{
     ControlPoint, ControlPointCommand, ControlPointResponseCode, ControlResponse, StreamSettings,
@@ -75,56 +76,54 @@ pub use control::{
 use polar_uuid::{NotifyUuid, StringUuid};
 pub use response::{Acc, Ecg, HeartRate, PmdData, PmdRead};
 
+use crate::v2::EventType;
+
 /// Error type for general errors and Ble errors from btleplug.
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
     /// No Bluetooth adapter found when trying to scan.
+    #[error("No BLE adaptor")]
     NoBleAdaptor,
     /// Could not create control point link.
+    #[error("No control point")]
     NoControlPoint,
     /// Could not find a device when trying to connect.
+    #[error("No device")]
     NoDevice,
     /// Device is not connected, but function was called that requires it.
+    #[error("Not connected")]
     NotConnected,
     /// No measurement type selected.
+    #[error("No data type")]
     NoDataType,
     /// Device is missing a characteristic that was used.
+    #[error("Characteristic not found")]
     CharacteristicNotFound,
     /// Data packets received from device could not be parsed.
+    #[error("Invalid data")]
     InvalidData,
     /// Not enough data was received.
+    #[error("Invalid length")]
     InvalidLength,
     /// Command to write to PMD control point is Null.
+    #[error("Null command")]
     NullCommand,
     /// Tried to create a struct using the wrong control point response.
+    #[error("Wrong response")]
     WrongResponse,
     /// Tried to set a setting using with a [`H10MeasurementType`] that doesn't support that feature.
+    #[error("Wrong type")]
     WrongType,
+    /// The control point did not return a response
+    #[error("No control point response")]
+    NoControlPointResponse,
+    /// The action you requested is not supoorted by the type you provided
+    #[error("Action not supported")]
+    ActionNotSupported,
     /// An error occurred in the underlying BLE library.
-    BleError(btleplug::Error),
+    #[error("BLE error: {0}")]
+    BleError(#[from] btleplug::Error),
 }
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let msg = match self {
-            Self::NoBleAdaptor => "No BLE adaptor".to_string(),
-            Self::NoControlPoint => "No control point".to_string(),
-            Self::NoDevice => "No device".to_string(),
-            Self::NotConnected => "Not connected".to_string(),
-            Self::NoDataType => "No data type".to_string(),
-            Self::CharacteristicNotFound => "Characteristic not found".to_string(),
-            Self::InvalidData => "Invalid data".to_string(),
-            Self::InvalidLength => "Invalid length".to_string(),
-            Self::NullCommand => "Null command".to_string(),
-            Self::WrongResponse => "Wrong response".to_string(),
-            Self::WrongType => "Wrong type".to_string(),
-            Self::BleError(er) => format!("BLE error: {:?}", er),
-        };
-        write!(f, "Arctic Error: {}", msg)
-    }
-}
-
-impl std::error::Error for Error {}
 
 /// List of measurement types you can request.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -225,6 +224,7 @@ pub trait EventHandler: Send + Sync {
 pub type PolarResult<T> = std::result::Result<T, Error>;
 
 /// A list of stream types that can be subscribed to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NotifyStream {
     /// Receive battery updates.
     Battery,
@@ -239,6 +239,16 @@ pub enum NotifyStream {
 impl From<NotifyStream> for Uuid {
     fn from(item: NotifyStream) -> Self {
         NotifyUuid::from(item).into()
+    }
+}
+
+impl From<EventType> for NotifyStream {
+    fn from(value: EventType) -> Self {
+        match value {
+            EventType::Battery => Self::Battery,
+            EventType::Hr => Self::HeartRate,
+            EventType::Acc | EventType::Ecg => Self::MeasurementData,
+        }
     }
 }
 

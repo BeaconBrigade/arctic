@@ -10,7 +10,7 @@ use btleplug::{
 use futures::StreamExt;
 use tracing::instrument;
 use std::{sync::Arc, time::Duration};
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::{mpsc, oneshot, watch};
 use uuid::Uuid;
 
 use crate::{
@@ -351,12 +351,17 @@ impl PolarSensor<EventLoop> {
         // bluetooth task
         tracing::info!("starting bluetooth task");
         let (bt_tx, mut bt_rx) = mpsc::channel(128);
+        let (pause_tx, pause_rx) = watch::channel(false);
         tokio::task::spawn(async move {
             let device = bt_sensor.ble_device.as_ref().unwrap();
             let mut notification_stream = device.notifications().await?;
 
             while let Some(data) = notification_stream.next().await {
                 tracing::debug!("received bluetooth data: {data:?}");
+                if *pause_rx.borrow() {
+                    tracing::debug!("paused: ignoring data");
+                    continue;
+                }
                 if data.uuid == NotifyUuid::BatteryLevel.into() {
                     let battery = data.value[0];
                     let Ok(_) = bt_tx.send(BluetoothEvent::Battery(battery)).await else { break };
@@ -411,7 +416,7 @@ impl PolarSensor<EventLoop> {
             }
         });
 
-        PolarHandle::new(event_tx)
+        PolarHandle::new(event_tx, pause_tx)
     }
 }
 
@@ -565,11 +570,12 @@ impl<L: Level + Connected> PolarSensor<L> {
 #[derive(Clone)]
 pub struct PolarHandle {
     sender: mpsc::Sender<Event>,
+    pause: Arc<watch::Sender<bool>>,
 }
 
 impl PolarHandle {
-    fn new(sender: mpsc::Sender<Event>) -> Self {
-        Self { sender }
+    fn new(sender: mpsc::Sender<Event>, pause: watch::Sender<bool>) -> Self {
+        Self { sender, pause: Arc::new(pause) }
     }
 
     /// Stop the [`PolarSensor`]
@@ -601,6 +607,22 @@ impl PolarHandle {
         let _ = self.sender.send(Event::Remove { ty, ret });
 
         rx.await.ok()
+    }
+
+    /// Pause handling of bluetooth events. This will stop all Bluetooth
+    /// events from being sent to your handler.
+    #[instrument(skip_all)]
+    pub fn pause(&self) {
+        tracing::info!("pausing bluetooth event handling");
+        let _ = self.pause.send(true);
+    }
+
+    /// Resume handling of bluetooth events. This will resume Bluetooth
+    /// event handling.
+    #[instrument(skip_all)]
+    pub fn resume(&self) {
+        tracing::info!("resuming bluetooth event handling");
+        let _ = self.pause.send(false);
     }
 }
 

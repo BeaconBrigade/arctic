@@ -4,13 +4,13 @@
 
 use async_trait::async_trait;
 use btleplug::{
-    api::{Central, Manager as _, Peripheral as _, ScanFilter},
+    api::{Central, Characteristic, Manager as _, Peripheral as _, ScanFilter},
     platform::{Manager, Peripheral},
 };
 use futures::StreamExt;
-use tracing::instrument;
-use std::{sync::Arc, time::Duration};
+use std::{collections::BTreeSet, sync::Arc, time::Duration};
 use tokio::sync::{mpsc, oneshot, watch};
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
@@ -464,6 +464,32 @@ impl<L: Level + Connected> PolarSensor<L> {
         Ok(feat)
     }
 
+    /// Fetch the characteristics of the device
+    pub fn characteristics(&self) -> BTreeSet<Characteristic> {
+        let device = self.ble_device.as_ref().unwrap();
+
+        device.characteristics()
+    }
+
+    /// Read the battery level of the device
+    #[instrument(skip_all)]
+    pub async fn battery(&self) -> PolarResult<u8> {
+        tracing::info!("fetching battery level");
+        let device = self.ble_device.as_ref().unwrap();
+
+        let characteristics = device.characteristics();
+        let characteristic = characteristics
+            .iter()
+            .find(|c| c.uuid == NotifyStream::from(EventType::Battery).into())
+            .ok_or(Error::CharacteristicNotFound)?;
+
+        let bytes = device.read(&characteristic).await?;
+        let byte = bytes[0];
+        tracing::debug!("read {} bytes: {bytes:x?}", bytes.len());
+
+        Ok(u8::from_le_bytes([byte]))
+    }
+
     #[instrument(skip(self))]
     async fn get_pmd_response(
         &self,
@@ -575,7 +601,10 @@ pub struct PolarHandle {
 
 impl PolarHandle {
     fn new(sender: mpsc::Sender<Event>, pause: watch::Sender<bool>) -> Self {
-        Self { sender, pause: Arc::new(pause) }
+        Self {
+            sender,
+            pause: Arc::new(pause),
+        }
     }
 
     /// Stop the [`PolarSensor`]

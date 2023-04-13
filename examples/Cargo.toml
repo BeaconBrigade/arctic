@@ -6,4 +6,6 @@ members = [
 	"multi-threaded",
 	"cli-app",
     "v2",
+    "characteristics",
+    "battery-level",
 ]

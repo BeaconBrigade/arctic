@@ -825,6 +825,22 @@ async fn find_characteristic(device: &Peripheral, uuid: Uuid) -> PolarResult<Cha
         .cloned()
 }
 
+/// Generated protobuf types
+#[allow(missing_docs)]
+pub mod proto {
+    pub mod types {
+        include!(concat!(env!("OUT_DIR"), "/types.rs"));
+    }
+
+    pub mod data {
+        include!(concat!(env!("OUT_DIR"), "/data.rs"));
+    }
+
+    pub mod protocol {
+        include!(concat!(env!("OUT_DIR"), "/protocol.rs"));
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

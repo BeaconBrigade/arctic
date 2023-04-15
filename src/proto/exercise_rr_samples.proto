@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+package data;
+
+message PbExerciseRRIntervals {
+  repeated uint32 rr_intervals = 1 [packed = true];
+};

@@ -14,6 +14,9 @@ const BODY_LOCATION_UUID: Uuid = Uuid::from_u128(0x00002a38_0000_1000_8000_00805
 const PMD_CP_UUID: Uuid = Uuid::from_u128(0xfb005c81_02e7_f387_1cad_8acd2d8df0c8);
 const PMD_DATA_UUID: Uuid = Uuid::from_u128(0xfb005c82_02e7_f387_1cad_8acd2d8df0c8);
 
+/// Local time service
+const RFC77_PFTP_MTU_CHARACTERISTIC: Uuid = Uuid::from_u128(0xfb005c51_02e7_f387_1cad_8acd2d8df0c8);
+
 const MODEL_NUMBER_STRING_UUID: Uuid = Uuid::from_u128(0x00002a24_0000_1000_8000_00805f9b34fb);
 const MANUFACTURER_NAME_STRING_UUID: Uuid = Uuid::from_u128(0x00002a29_0000_1000_8000_00805f9b34fb);
 const HARDWARE_REVISION_STRING_UUID: Uuid = Uuid::from_u128(0x00002a27_0000_1000_8000_00805f9b34fb);

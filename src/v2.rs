@@ -153,9 +153,7 @@ impl PolarSensor<Bluetooth> {
         F: FnMut(PolarResult<()>) -> PolarResult<()>,
     {
         while !self.is_connected().await {
-            if let Err(e) = f(self.try_connect(device_id).await) {
-                return Err(e);
-            }
+            f(self.try_connect(device_id).await)?
         }
         let new_self: PolarSensor<Configure> = PolarSensor {
             ble_manager: self.ble_manager,
@@ -432,7 +430,7 @@ impl<L: Level + Connected> PolarSensor<L> {
             .find(|c| c.uuid == ty.into())
             .ok_or(Error::CharacteristicNotFound)?;
 
-        device.subscribe(&characteristic).await?;
+        device.subscribe(characteristic).await?;
 
         Ok(())
     }
@@ -448,7 +446,7 @@ impl<L: Level + Connected> PolarSensor<L> {
             .find(|c| c.uuid == ty.into())
             .ok_or(Error::CharacteristicNotFound)?;
 
-        device.unsubscribe(&characteristic).await?;
+        device.unsubscribe(characteristic).await?;
 
         Ok(())
     }
@@ -460,7 +458,7 @@ impl<L: Level + Connected> PolarSensor<L> {
         let controller = self.control_point.as_ref().unwrap();
         let device = self.ble_device.as_ref().unwrap();
 
-        let feat = SupportedFeatures::new(controller.read(&device).await?[1]);
+        let feat = SupportedFeatures::new(controller.read(device).await?[1]);
         Ok(feat)
     }
 
@@ -483,7 +481,7 @@ impl<L: Level + Connected> PolarSensor<L> {
             .find(|c| c.uuid == NotifyStream::from(EventType::Battery).into())
             .ok_or(Error::CharacteristicNotFound)?;
 
-        let bytes = device.read(&characteristic).await?;
+        let bytes = device.read(characteristic).await?;
         let byte = bytes[0];
         tracing::debug!("read {} bytes: {bytes:x?}", bytes.len());
 
@@ -529,7 +527,7 @@ impl<L: Level + Connected> PolarSensor<L> {
         let device = self.ble_device.as_ref().unwrap();
 
         controller
-            .send_command(&device, [1, ty.as_u8()].to_vec())
+            .send_command(device, [1, ty.as_u8()].to_vec())
             .await?;
 
         Ok(())
@@ -585,7 +583,7 @@ impl<L: Level + Connected> PolarSensor<L> {
         let device = self.ble_device.as_ref().unwrap();
 
         controller
-            .send_command(&device, [3, ty.as_u8()].to_vec())
+            .send_command(device, [3, ty.as_u8()].to_vec())
             .await?;
 
         Ok(())
@@ -621,7 +619,7 @@ impl PolarHandle {
     pub async fn add(&self, ty: H10MeasurementType) -> Option<PolarResult<ControlResponse>> {
         tracing::info!("adding type: {ty:?}");
         let (ret, rx) = oneshot::channel();
-        let _ = self.sender.send(Event::Add { ty, ret });
+        let _ = self.sender.send(Event::Add { ty, ret }).await;
 
         rx.await.ok()
     }
@@ -633,7 +631,7 @@ impl PolarHandle {
     pub async fn remove(&self, ty: H10MeasurementType) -> Option<PolarResult<ControlResponse>> {
         tracing::info!("removing type: {ty:?}");
         let (ret, rx) = oneshot::channel();
-        let _ = self.sender.send(Event::Remove { ty, ret });
+        let _ = self.sender.send(Event::Remove { ty, ret }).await;
 
         rx.await.ok()
     }

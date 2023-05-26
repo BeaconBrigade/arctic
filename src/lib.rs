@@ -127,6 +127,7 @@ pub enum Error {
 
 /// List of measurement types you can request.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum H10MeasurementType {
     /// Volts (V).
     Ecg,
@@ -164,6 +165,7 @@ impl H10MeasurementType {
 
 /// Struct that reads what features are available on your device.
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SupportedFeatures {
     /// Electrocardiogram.
     pub ecg: bool,
@@ -225,6 +227,7 @@ pub type PolarResult<T> = std::result::Result<T, Error>;
 
 /// A list of stream types that can be subscribed to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum NotifyStream {
     /// Receive battery updates.
     Battery,

@@ -16,6 +16,7 @@ const PMD_DATA_UUID: Uuid = Uuid::from_u128(0xfb005c82_02e7_f387_1cad_8acd2d8df0
 
 /// Command options to write to the control point.
 #[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ControlPointCommand {
     /// Do nothing.
     Null = 0,
@@ -46,6 +47,7 @@ impl TryFrom<u8> for ControlPointCommand {
 
 /// Response code returned after a write to PMD control point.
 #[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ControlPointResponseCode {
     /// Command was successful.
     Success = 0,
@@ -182,6 +184,7 @@ enum PmdByteType {
 
 /// Struct to store the settings for a specific stream on your device.
 #[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StreamSettings {
     ty: H10MeasurementType,
     resolution: u8,
@@ -272,6 +275,7 @@ impl StreamSettings {
 
 /// Store data returned from the device after a write to the control point.
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ControlResponse {
     op_code: ControlPointCommand,
     measurement_type: H10MeasurementType,

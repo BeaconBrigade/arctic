@@ -42,6 +42,7 @@ fn bytes_to_data(data: &[u8], len: usize) -> i32 {
 
 /// Struct for receiving measurement type data on PMD data.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PmdRead {
     data_type: H10MeasurementType,
     time_stamp: u64,
@@ -105,6 +106,7 @@ impl PmdRead {
 
 /// Enum to store which kind of data was received.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum PmdData {
     /// Electrocardiogram.
     Ecg(Ecg),
@@ -114,6 +116,7 @@ pub enum PmdData {
 
 /// Struct to store ECG from the PMD data stream.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Ecg {
     val: i32,
 }
@@ -141,6 +144,7 @@ impl Ecg {
 
 /// Struct to store acceleration from the PMD data stream.
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Acc {
     x: i32,
     y: i32,
@@ -174,6 +178,7 @@ impl Acc {
 
 /// Structure to contain HR data and RR interval.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HeartRate {
     bpm: u8,
     rr: Option<Vec<u16>>,

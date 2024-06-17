@@ -26,6 +26,7 @@ const SERIAL_NUMBER_STRING_UUID: Uuid = Uuid::from_u128(0x00002a25_0000_1000_800
 const SYSTEM_ID_UUID: Uuid = Uuid::from_u128(0x00002a23_0000_1000_8000_00805f9b34fb);
 
 /// Which UUID to send BLE messages to.
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum NotifyUuid {
     BatteryLevel,
     HeartMeasurement,
@@ -65,6 +66,7 @@ impl From<NotifyUuid> for Uuid {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum StringUuid {
     BodyLocation,
     ModelNumber,
